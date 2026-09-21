@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Parsippany client drop-off and pickup log.">
+  <title>Parsippany Drop-off &amp; Pickup Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/tablet.css">
+  <style>.client-name-fields{border:0;padding:0;margin:22px 0 0}.client-name-fields legend{color:var(--navy);font-size:14px;font-weight:700}.client-name-fields .time-fields{margin-top:10px}</style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="https://successonthespectrum.com/location/parsippany/" target="_blank" rel="noopener">
+      <img src="https://successonthespectrum.com/wp-content/uploads/2026/03/header-logo.webp" alt="Success On The Spectrum">
+      <span><strong>Parsippany</strong><small>Drop-off &amp; Pickup Log</small></span>
+    </a>
+  </header>
+
+  <main>
+    <section class="form-card">
+      <div class="intro">
+        <p class="eyebrow">WELCOME</p>
+        <h1>Drop-off &amp; pickup log</h1>
+        <p>Choose Drop-off when the client enters the facility. Choose Pickup when the client leaves. The visit date is recorded automatically.</p>
+      </div>
+
+      <form id="arrivalForm">
+        <label for="parentName">Parent or guardian name</label>
+        <input id="parentName" name="parentName" type="text" autocomplete="name" maxlength="120" placeholder="Enter full name" required>
+
+        <fieldset class="client-name-fields">
+          <legend>Client name</legend>
+          <div class="time-fields">
+            <div><label for="clientFirstName">First name</label><input id="clientFirstName" name="clientFirstName" type="text" autocomplete="given-name" maxlength="60" placeholder="Enter first name" required></div>
+            <div><label for="clientLastName">Last name</label><input id="clientLastName" name="clientLastName" type="text" autocomplete="family-name" maxlength="60" placeholder="Enter last name" required></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="visit-choice">
+          <legend>What would you like to record?</legend>
+          <label><input type="radio" name="visitAction" value="arrival" checked> Drop-off</label>
+          <label><input type="radio" name="visitAction" value="departure"> Pickup</label>
+        </fieldset>
+
+        <div class="time-fields">
+          <div><label for="arrivalTime">Drop-off time</label><input id="arrivalTime" name="arrivalTime" type="time" required></div>
+          <div><label for="departureTime">Pickup time</label><input id="departureTime" name="departureTime" type="time" disabled></div>
+        </div>
+
+        <button type="submit">Record visit</button>
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <span>Success On The Spectrum — Parsippany</span>
+    <span>2200 Route 10 W #130, Parsippany, NJ 07054 · <a href="/admin.html" style="color:#f5d15e">Admin export</a></span>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>

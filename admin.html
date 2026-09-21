@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><title>Admin Visit Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <header><a class="brand" href="/"><img src="https://successonthespectrum.com/wp-content/uploads/2026/03/header-logo.webp" alt="Success On The Spectrum"><span><strong>Parsippany</strong><small>Drop-off &amp; Pickup Manager</small></span></a></header>
+  <main>
+    <section class="form-card admin-card">
+      <div class="intro"><p class="eyebrow">AUTHORIZED ACCESS</p><h1>Visit records</h1><p>Search, correct, delete, or export visit records.</p></div>
+      <form id="searchForm">
+        <div class="filters">
+          <div><label for="fromDate">From date</label><input id="fromDate" type="date" required></div>
+          <div><label for="toDate">To date</label><input id="toDate" type="date" required></div>
+          <div class="wide"><label for="clientName">Full client or parent name (optional)</label><input id="clientName" maxlength="120" placeholder="Enter the complete name, or leave blank for all visits"></div>
+          <div class="wide"><label for="password">Admin password</label><input id="password" type="password" autocomplete="current-password" required></div>
+        </div>
+        <div class="button-row"><button type="submit">View Records</button><button id="exportButton" class="outline" type="button">Download CSV for Excel</button></div>
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+      </form>
+      <section id="storagePanel" class="storage-panel" hidden aria-live="polite">
+        <div class="storage-heading"><div><span>DATABASE STORAGE</span><strong>Connected database balance</strong></div><b id="storagePercent">0% used</b></div>
+        <div class="storage-meter" role="progressbar" aria-label="Database storage used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="storageBar"></span></div>
+        <div class="storage-values"><div><span>Used</span><strong id="storageUsed">—</strong></div><div><span>Estimated remaining</span><strong id="storageRemaining">—</strong></div><div><span>Free allowance</span><strong id="storageLimit">0.5 GB</strong></div></div>
+        <p>This is the total size of the database connected to this website. It updates whenever records are viewed.</p>
+      </section>
+    </section>
+
+    <section id="results" class="records-card" hidden>
+      <div class="records-head"><div><p class="eyebrow">SEARCH RESULTS</p><h2>Matching visits</h2></div><strong id="visitCount">0 visits</strong></div>
+      <div class="table-wrap"><table><thead><tr><th>Client first name</th><th>Client last name</th><th>Drop-off guardian</th><th>Pickup guardian</th><th>Date</th><th>Drop-off</th><th>Pickup</th><th>Actions</th></tr></thead><tbody id="recordsBody"></tbody></table></div>
+      <div id="empty" class="empty" hidden>No visits match these filters.</div>
+    </section>
+  </main>
+  <footer><span>Success On The Spectrum — Parsippany</span><span><a href="/">Return to drop-off &amp; pickup log</a></span></footer>
+  <script src="/admin.js"></script>
+</body>
+</html>
