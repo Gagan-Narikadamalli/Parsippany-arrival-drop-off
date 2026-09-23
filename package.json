@@ -3,5 +3,5 @@
   "version":"1.0.0",
   "private":true,
   "engines":{"node":">=20"},
-  "dependencies":{"@neondatabase/serverless":"^1.0.2"}
+  "dependencies":{"@neondatabase/serverless":"^1.0.2","exceljs":"^4.4.0"}
 }

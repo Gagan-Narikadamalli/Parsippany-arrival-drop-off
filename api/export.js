@@ -1,5 +1,6 @@
 const crypto=require("crypto");
 const {neon}=require("@neondatabase/serverless");
+const ExcelJS=require("exceljs");
 function sameSecret(value,expected){const a=Buffer.from(String(value||""));const b=Buffer.from(String(expected||""));return a.length===b.length&&crypto.timingSafeEqual(a,b);}
 function csv(value){return `"${String(value??"").replace(/"/g,'""')}"`;}
 module.exports=async function handler(req,res){
@@ -7,13 +8,19 @@ module.exports=async function handler(req,res){
   if(req.method!=="POST")return res.status(405).json({ok:false,error:"Method not allowed."});
   if(!process.env.DATABASE_URL||!process.env.ADMIN_PASSWORD)return res.status(503).json({ok:false,error:"Admin export setup is not complete."});
   if(!sameSecret(req.body?.password,process.env.ADMIN_PASSWORD))return res.status(401).json({ok:false,error:"Incorrect admin password."});
-  const from=String(req.body?.fromDate||"");const to=String(req.body?.toDate||"");const name=String(req.body?.clientName||"").trim();
+  const from=String(req.body?.fromDate||"");const to=String(req.body?.toDate||"");const name=String(req.body?.clientName||"").trim();const format=String(req.body?.format||"csv").toLowerCase();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)return res.status(400).json({ok:false,error:"Choose a valid date range."});
+  if(!["csv","xlsx"].includes(format))return res.status(400).json({ok:false,error:"Choose CSV or Excel format."});
   try{
     const sql=neon(process.env.DATABASE_URL);await sql`ALTER TABLE visit_submissions ADD COLUMN IF NOT EXISTS arrival_time TIME`;await sql`ALTER TABLE visit_submissions ADD COLUMN IF NOT EXISTS departure_time TIME`;await sql`ALTER TABLE visit_submissions ADD COLUMN IF NOT EXISTS client_first_name TEXT`;await sql`ALTER TABLE visit_submissions ADD COLUMN IF NOT EXISTS client_last_name TEXT`;await sql`ALTER TABLE visit_submissions ADD COLUMN IF NOT EXISTS arrival_guardian_name TEXT`;await sql`ALTER TABLE visit_submissions ADD COLUMN IF NOT EXISTS departure_guardian_name TEXT`;await sql`UPDATE visit_submissions SET arrival_time=visit_time WHERE arrival_time IS NULL`;await sql`UPDATE visit_submissions SET client_first_name=COALESCE(client_first_name,split_part(regexp_replace(TRIM(client_name),'[[:space:]]+',' ','g'),' ',1)),client_last_name=COALESCE(client_last_name,CASE WHEN regexp_replace(TRIM(client_name),'[[:space:]]+',' ','g') LIKE '% %' THEN substring(regexp_replace(TRIM(client_name),'[[:space:]]+',' ','g') FROM position(' ' IN regexp_replace(TRIM(client_name),'[[:space:]]+',' ','g'))+1) ELSE '' END),arrival_guardian_name=COALESCE(arrival_guardian_name,parent_name)`;let rows;
     if(name){rows=await sql`SELECT client_name,client_first_name,client_last_name,arrival_guardian_name,departure_guardian_name,visit_date,COALESCE(arrival_time,visit_time) AS arrival_time,departure_time FROM visit_submissions WHERE visit_date BETWEEN ${from}::date AND ${to}::date AND (LOWER(TRIM(client_name))=LOWER(${name}) OR LOWER(TRIM(arrival_guardian_name))=LOWER(${name}) OR LOWER(TRIM(departure_guardian_name))=LOWER(${name})) ORDER BY visit_date,COALESCE(arrival_time,visit_time)`;}
     else{rows=await sql`SELECT client_name,client_first_name,client_last_name,arrival_guardian_name,departure_guardian_name,visit_date,COALESCE(arrival_time,visit_time) AS arrival_time,departure_time FROM visit_submissions WHERE visit_date BETWEEN ${from}::date AND ${to}::date ORDER BY visit_date,COALESCE(arrival_time,visit_time)`;}
-    const lines=[["Client First Name","Client Last Name","Client Full Name","Drop-off Parent or Guardian","Pickup Parent or Guardian","Visit Date","Drop-off Time","Pickup Time"].map(csv).join(","),...rows.map(row=>[row.client_first_name,row.client_last_name,row.client_name,row.arrival_guardian_name,row.departure_guardian_name,row.visit_date,row.arrival_time,row.departure_time].map(csv).join(","))];
+    const headers=["Client First Name","Client Last Name","Client Full Name","Drop-off Parent or Guardian","Pickup Parent or Guardian","Visit Date","Drop-off Time","Pickup Time"];
+    const values=rows.map(row=>[row.client_first_name,row.client_last_name,row.client_name,row.arrival_guardian_name,row.departure_guardian_name,String(row.visit_date).slice(0,10),String(row.arrival_time||"").slice(0,8),String(row.departure_time||"").slice(0,8)]);
+    if(format==="xlsx"){
+      const workbook=new ExcelJS.Workbook();workbook.creator="Success On The Spectrum";const sheet=workbook.addWorksheet("Visit Records",{views:[{state:"frozen",ySplit:1}]});sheet.addRow(headers);values.forEach(row=>sheet.addRow(row));sheet.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};sheet.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF12345B"}};sheet.columns=[{width:20},{width:20},{width:28},{width:30},{width:30},{width:14},{width:16},{width:16}];sheet.autoFilter={from:"A1",to:"H1"};const buffer=await workbook.xlsx.writeBuffer();res.setHeader("Content-Type","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");res.setHeader("Content-Disposition",`attachment; filename="sos-visits-${from}-to-${to}.xlsx"`);res.setHeader("X-Visit-Count",String(rows.length));return res.status(200).send(Buffer.from(buffer));
+    }
+    const lines=[headers.map(csv).join(","),...values.map(row=>row.map(csv).join(","))];
     res.setHeader("Content-Type","text/csv; charset=utf-8");res.setHeader("Content-Disposition",`attachment; filename="sos-visits-${from}-to-${to}.csv"`);res.setHeader("X-Visit-Count",String(rows.length));return res.status(200).send("\uFEFF"+lines.join("\r\n"));
   }catch(error){console.error("Visit export failed",{name:error?.name||"Error"});return res.status(500).json({ok:false,error:"Report could not be created. Please try again."});}
 };

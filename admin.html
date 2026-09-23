@@ -19,7 +19,7 @@
           <div class="wide"><label for="clientName">Full client or parent name (optional)</label><input id="clientName" maxlength="120" placeholder="Enter the complete name, or leave blank for all visits"></div>
           <div class="wide"><label for="password">Admin password</label><input id="password" type="password" autocomplete="current-password" required></div>
         </div>
-        <div class="button-row"><button type="submit">View Records</button><button id="exportButton" class="outline" type="button">Download CSV for Excel</button></div>
+        <div class="button-row"><button type="submit">View Records</button><div class="export-controls"><label for="exportFormat">Download format</label><select id="exportFormat"><option value="xlsx">Excel workbook (.xlsx)</option><option value="csv">CSV file (.csv)</option></select><button id="exportButton" class="outline" type="button">Download Report</button></div></div>
         <div id="message" class="message" role="status" aria-live="polite"></div>
       </form>
       <section id="storagePanel" class="storage-panel" hidden aria-live="polite">
