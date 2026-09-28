@@ -59,7 +59,7 @@ module.exports = async function handler(req,res){
   const visitAction=String(req.body?.visitAction||"");
   const arrivalTime=String(req.body?.arrivalTime||"");
   const departureTime=String(req.body?.departureTime||"");
-  if(!parentName||!clientFirstName||!clientLastName)return res.status(400).json({ok:false,error:"Parent or guardian name, client first name, and client last name are required."});
+  if(!parentName||!clientFirstName||!clientLastName)return res.status(400).json({ok:false,error:"Parent or guardian name, kid's first name, and kid's last name are required."});
   if(parentName.length>120||clientFirstName.length>60||clientLastName.length>60)return res.status(400).json({ok:false,error:"One or more names are too long."});
   const validTime=value=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
   if(!["arrival","departure"].includes(visitAction))return res.status(400).json({ok:false,error:"Choose drop-off or pickup."});
@@ -71,7 +71,7 @@ module.exports = async function handler(req,res){
     await ensureSchema(sql);
     if(visitAction==="arrival"){
       const open=await sql`SELECT id FROM visit_submissions WHERE visit_date=(CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date AND LOWER(TRIM(client_first_name))=LOWER(${clientFirstName}) AND LOWER(TRIM(client_last_name))=LOWER(${clientLastName}) AND departure_time IS NULL LIMIT 1`;
-      if(open.length)return res.status(409).json({ok:false,error:"This client already has a drop-off recorded today. Choose Pickup to record when the client leaves."});
+      if(open.length)return res.status(409).json({ok:false,error:"This kid already has a drop-off recorded today. Choose Pickup to record when the kid leaves."});
       const id=crypto.randomUUID();
       const rows=await sql`INSERT INTO visit_submissions (id,parent_name,arrival_guardian_name,departure_guardian_name,client_name,client_first_name,client_last_name,visit_date,visit_time,arrival_time,departure_time)
         VALUES (${id},${parentName},${parentName},NULL,${clientName},${clientFirstName},${clientLastName},(CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date,${arrivalTime}::time,${arrivalTime}::time,NULL)
@@ -80,7 +80,7 @@ module.exports = async function handler(req,res){
     }
 
     const open=await sql`SELECT id,COALESCE(arrival_time,visit_time) AS arrival_time FROM visit_submissions WHERE visit_date=(CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date AND LOWER(TRIM(client_first_name))=LOWER(${clientFirstName}) AND LOWER(TRIM(client_last_name))=LOWER(${clientLastName}) AND departure_time IS NULL ORDER BY COALESCE(arrival_time,visit_time) DESC LIMIT 1`;
-    if(!open.length)return res.status(404).json({ok:false,error:"No open drop-off was found today for this client. Check the client first and last name and try again."});
+    if(!open.length)return res.status(404).json({ok:false,error:"No open drop-off was found today for this kid. Check the kid's first and last name and try again."});
     if(departureTime<String(open[0].arrival_time).slice(0,5))return res.status(400).json({ok:false,error:"Pickup time cannot be earlier than the recorded drop-off time."});
     const rows=await sql`UPDATE visit_submissions SET departure_time=${departureTime}::time,departure_guardian_name=${parentName} WHERE id=${open[0].id}::uuid RETURNING visit_date,arrival_time,departure_time`;
     return res.status(200).json({ok:true,action:"departure",visitDate:rows[0].visit_date,arrivalTime:rows[0].arrival_time,departureTime:rows[0].departure_time});

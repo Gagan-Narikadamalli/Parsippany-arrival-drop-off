@@ -1,14 +1,13 @@
 const form=document.getElementById("arrivalForm");
 const message=document.getElementById("message");
-function setCurrentArrivalTime(){const now=new Date();form.arrivalTime.value=`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;}
-setCurrentArrivalTime();
 function currentTime(){const now=new Date();return `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;}
 function updateVisitAction(){
-  const departure=form.visitAction.value==="departure";
-  form.arrivalTime.disabled=departure;form.arrivalTime.required=!departure;
+  const action=form.visitAction.value;
+  const arrival=action==="arrival";const departure=action==="departure";
+  form.arrivalTime.disabled=!arrival;form.arrivalTime.required=arrival;
   form.departureTime.disabled=!departure;form.departureTime.required=departure;
-  if(departure){form.arrivalTime.value="";if(!form.departureTime.value)form.departureTime.value=currentTime();}
-  else{form.departureTime.value="";if(!form.arrivalTime.value)form.arrivalTime.value=currentTime();}
+  form.arrivalTime.value=arrival?currentTime():"";
+  form.departureTime.value=departure?currentTime():"";
 }
 form.querySelectorAll('[name="visitAction"]').forEach(input=>input.addEventListener("change",updateVisitAction));
 
@@ -35,7 +34,6 @@ form.addEventListener("submit",async event=>{
     const data=await response.json();
     if(!response.ok||!data.ok)throw new Error(data.error||"The form could not be submitted.");
     form.reset();
-    setCurrentArrivalTime();
     updateVisitAction();
     message.textContent=data.action==="departure"?"Pickup recorded successfully. Thank you.":"Drop-off recorded successfully. Thank you.";
     message.className="message success";
