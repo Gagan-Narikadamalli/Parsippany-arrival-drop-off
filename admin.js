@@ -4,7 +4,8 @@ const results=document.getElementById("results");
 const body=document.getElementById("recordsBody");
 const newRecordButton=document.getElementById("newRecord");
 const today=new Date().toISOString().slice(0,10);
-form.fromDate.value=today;form.toDate.value=today;
+// Show the complete history by default. Managers can still narrow the range.
+form.fromDate.value="2020-01-01";form.toDate.value=today;
 const esc=value=>String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
 const filters=()=>({fromDate:form.fromDate.value,toDate:form.toDate.value,clientName:form.clientName.value.trim(),password:form.password.value});
 
